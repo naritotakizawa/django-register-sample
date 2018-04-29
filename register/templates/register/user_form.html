@@ -1,0 +1,18 @@
+{% extends "register/base.html" %}
+{% block content %}
+<form action="" method="POST">
+    {{ form.non_field_errors }}
+    <table class="table">
+        <tbody>
+            {% for field in form %}
+                <tr>
+                    <th><label for="{{ field.id_for_label }}">{{ field.label }}</label></th>
+                    <td>{{ field }} {{ field.errors }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success btn-lg" >送信</button>
+</form>
+{% endblock %}
