@@ -79,13 +79,13 @@ class UserCreateComplete(generic.TemplateView):
     """メール内URLアクセス後のユーザー本登録"""
     template_name = 'register/user_create_complete.html'
     signer = TimestampSigner()
-    timeout_days = getattr(settings, 'ACTIVATION_TIMEOUT_DAYS', 60*60*24)  # デフォルトでは1日以内
+    timeout_seconds = getattr(settings, 'ACTIVATION_TIMEOUT_SECONDS', 60*60*24)  # デフォルトでは1日以内
 
     def get(self, request, **kwargs):
         """uid、tokenが正しければ本登録."""
         token = kwargs.get('token')
         try:
-            user_pk = self.signer.unsign(token, max_age=self.timeout_days)
+            user_pk = self.signer.unsign(token, max_age=self.timeout_seconds)
 
         # 期限切れ
         except SignatureExpired:
