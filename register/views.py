@@ -87,12 +87,12 @@ class UserCreateComplete(generic.TemplateView):
         try:
             user_pk = self.signer.unsign(token, max_age=self.timeout_days)
 
-        # tokenが何かおかしいとき
-        except BadSignature:
-            raise Http404
-
         # 期限切れ
         except SignatureExpired:
+            raise Http404
+
+        # tokenが何かおかしいとき
+        except BadSignature:
             raise Http404
 
         # tokenは問題なし
