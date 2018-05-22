@@ -6,9 +6,9 @@ from django.contrib.auth.views import (
     PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 )
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
-from django.http import Http404, HttpResponseBadRequest
-from django.shortcuts import redirect, resolve_url, get_object_or_404
+from django.core.signing import BadSignature, SignatureExpired, loads, dumps
+from django.http import HttpResponseBadRequest
+from django.shortcuts import redirect, resolve_url
 from django.template.loader import get_template
 from django.urls import reverse_lazy
 from django.views import generic
@@ -40,7 +40,6 @@ class UserCreate(generic.CreateView):
     """ユーザー仮登録"""
     template_name = 'register/user_create.html'
     form_class = UserCreateForm
-    signer = TimestampSigner()
 
     def form_valid(self, form):
         """仮登録と本登録用メールの発行."""
@@ -56,7 +55,7 @@ class UserCreate(generic.CreateView):
         context = {
             'protocol': 'https' if self.request.is_secure() else 'http',
             'domain': domain,
-            'token': self.signer.sign(user.pk),
+            'token': dumps(user.pk),
             'user': user,
         }
 
@@ -78,14 +77,13 @@ class UserCreateDone(generic.TemplateView):
 class UserCreateComplete(generic.TemplateView):
     """メール内URLアクセス後のユーザー本登録"""
     template_name = 'register/user_create_complete.html'
-    signer = TimestampSigner()
     timeout_seconds = getattr(settings, 'ACTIVATION_TIMEOUT_SECONDS', 60*60*24)  # デフォルトでは1日以内
 
     def get(self, request, **kwargs):
         """tokenが正しければ本登録."""
         token = kwargs.get('token')
         try:
-            user_pk = self.signer.unsign(token, max_age=self.timeout_seconds)
+            user_pk = loads(token, max_age=self.timeout_seconds)
 
         # 期限切れ
         except SignatureExpired:
