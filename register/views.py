@@ -7,7 +7,7 @@ from django.contrib.auth.views import (
 )
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect, resolve_url, get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse_lazy
@@ -50,7 +50,7 @@ class UserCreate(generic.CreateView):
         user.is_active = False
         user.save()
 
-        # 管理サイトのパスワードリセットの際に行っている処理とほぼ同じ
+        # アクティベーションURLの送付
         current_site = get_current_site(self.request)
         domain = current_site.domain
         context = {
@@ -82,30 +82,34 @@ class UserCreateComplete(generic.TemplateView):
     timeout_seconds = getattr(settings, 'ACTIVATION_TIMEOUT_SECONDS', 60*60*24)  # デフォルトでは1日以内
 
     def get(self, request, **kwargs):
-        """uid、tokenが正しければ本登録."""
+        """tokenが正しければ本登録."""
         token = kwargs.get('token')
         try:
             user_pk = self.signer.unsign(token, max_age=self.timeout_seconds)
 
         # 期限切れ
         except SignatureExpired:
-            raise Http404
+            return HttpResponseBadRequest()
 
-        # tokenが何かおかしいとき
+        # tokenが間違っている
         except BadSignature:
-            raise Http404
+            return HttpResponseBadRequest()
 
         # tokenは問題なし
         else:
-            # そのpkのユーザーが見つからない場合と、既にis_active=Trueなら404
-            user = get_object_or_404(User, pk=user_pk)
-            if user.is_active:
-                raise Http404
+            try:
+                user = User.objects.get(pk=user_pk)
+            except User.DoenNotExist:
+                return HttpResponseBadRequest()
+            else:
+                if not user.is_active:
+                    # まだ仮登録で、他に問題なければ本登録とする
+                    user.is_active = True
+                    user.save()
+                    return super().get(request, **kwargs)
 
-            # 問題なければ本登録とする
-            user.is_active = True
-            user.save()
-            return super().get(request, **kwargs)
+        return HttpResponseBadRequest()
+
 
 
 class OnlyYouMixin(UserPassesTestMixin):
