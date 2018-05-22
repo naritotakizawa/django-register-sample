@@ -4,6 +4,6 @@
 まだ会員登録手続きは完了しておりませんので、ご注意ください。
 
 本登録用URL
-{{ protocol}}://{{ domain }}{% url 'register:user_create_complete' uidb64 token %}
+{{ protocol}}://{{ domain }}{% url 'register:user_create_complete' token %}
 
 ほにゃらら

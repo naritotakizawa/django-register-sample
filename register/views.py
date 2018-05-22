@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import (
@@ -5,12 +6,11 @@ from django.contrib.auth.views import (
     PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 )
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.http import Http404
-from django.shortcuts import redirect, resolve_url
+from django.shortcuts import redirect, resolve_url, get_object_or_404
 from django.template.loader import get_template
 from django.urls import reverse_lazy
-from django.utils.encoding import force_bytes, force_text
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views import generic
 from .forms import (
     LoginForm, UserCreateForm, UserUpdateForm, MyPasswordChangeForm,
@@ -40,6 +40,7 @@ class UserCreate(generic.CreateView):
     """ユーザー仮登録"""
     template_name = 'register/user_create.html'
     form_class = UserCreateForm
+    signer = TimestampSigner()
 
     def form_valid(self, form):
         """仮登録と本登録用メールの発行."""
@@ -55,8 +56,7 @@ class UserCreate(generic.CreateView):
         context = {
             'protocol': 'https' if self.request.is_secure() else 'http',
             'domain': domain,
-            'uidb64': urlsafe_base64_encode(force_bytes(user.pk)).decode('utf-8'),
-            'token': urlsafe_base64_encode(force_bytes(user.email)).decode('utf-8'),
+            'token': self.signer.sign(user.pk),
             'user': user,
         }
 
@@ -78,25 +78,34 @@ class UserCreateDone(generic.TemplateView):
 class UserCreateComplete(generic.TemplateView):
     """メール内URLアクセス後のユーザー本登録"""
     template_name = 'register/user_create_complete.html'
+    signer = TimestampSigner()
+    timeout_seconds = getattr(settings, 'ACTIVATION_TIMEOUT_SECONDS', 60*60*24)  # デフォルトでは1日以内
 
     def get(self, request, **kwargs):
         """uid、tokenが正しければ本登録."""
         token = kwargs.get('token')
-        uidb64 = kwargs.get('uidb64')
         try:
-            uid = force_text(urlsafe_base64_decode(uidb64))
-            email = force_text(urlsafe_base64_decode(token))
-            user = User.objects.get(pk=uid, email=email)
+            user_pk = self.signer.unsign(token, max_age=self.timeout_seconds)
+
+        # 期限切れ
+        except SignatureExpired:
+            raise Http404
+
+        # tokenが何かおかしいとき
+        except BadSignature:
+            raise Http404
+
+        # tokenは問題なし
+        else:
+            # そのpkのユーザーが見つからない場合と、既にis_active=Trueなら404
+            user = get_object_or_404(User, pk=user_pk)
             if user.is_active:
                 raise Http404
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            pass
-        else:
+
+            # 問題なければ本登録とする
             user.is_active = True
             user.save()
             return super().get(request, **kwargs)
-
-        raise Http404
 
 
 class OnlyYouMixin(UserPassesTestMixin):
