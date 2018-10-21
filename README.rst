@@ -27,4 +27,4 @@ django-register-sample
     python manage.py runserver
     python manage.py createsuperuser
 
-カスタムしたUserモデルを使うようにしていますが、デフォルトのUserモデルでも試せます。その場合は、settings.pyのAUTH_USER_MODELをコメントアウトし、関連ファイル(db.sqlite3等)を削除後、2の手順を行ってください。
+カスタムしたUserモデルを使うようにしていますが、デフォルトのUserモデルでも試せます。その場合は、settings.pyのAUTH_USER_MODELをコメントアウトし、関連ファイル(migrationsディレクトリ、db.sqlite3等)を削除後、2の手順を行ってください。
