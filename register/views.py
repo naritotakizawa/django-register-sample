@@ -109,7 +109,6 @@ class UserCreateComplete(generic.TemplateView):
         return HttpResponseBadRequest()
 
 
-
 class OnlyYouMixin(UserPassesTestMixin):
     """本人か、スーパーユーザーだけユーザーページアクセスを許可する"""
     raise_exception = True
@@ -149,8 +148,8 @@ class PasswordChangeDone(PasswordChangeDoneView):
 
 class PasswordReset(PasswordResetView):
     """パスワード変更用URLの送付ページ"""
-    subject_template_name = 'register/mail_template/reset/subject.txt'
-    email_template_name = 'register/mail_template/reset/message.txt'
+    subject_template_name = 'register/mail_template/password_reset/subject.txt'
+    email_template_name = 'register/mail_template/password_reset/message.txt'
     template_name = 'register/password_reset_form.html'
     form_class = MyPasswordResetForm
     success_url = reverse_lazy('register:password_reset_done')
