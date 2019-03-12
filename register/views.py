@@ -97,7 +97,7 @@ class UserCreateComplete(generic.TemplateView):
         else:
             try:
                 user = User.objects.get(pk=user_pk)
-            except User.DoenNotExist:
+            except User.DoesNotExist:
                 return HttpResponseBadRequest()
             else:
                 if not user.is_active:
