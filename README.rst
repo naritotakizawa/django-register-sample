@@ -22,9 +22,7 @@ django-register-sample
 
 2. 動かす。::
 
-    python manage.py makemigrations register
     python manage.py migrate
     python manage.py runserver
     python manage.py createsuperuser
 
-カスタムしたUserモデルを使うようにしていますが、デフォルトのUserモデルでも試せます。その場合は、settings.pyのAUTH_USER_MODELをコメントアウトし、関連ファイル(migrationsディレクトリ、db.sqlite3等)を削除後、2の手順を行ってください。
