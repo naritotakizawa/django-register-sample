@@ -4,14 +4,8 @@
     <tbody>
         <tr>
             <th>ユーザー名</th>
-            <td>{{ user.username }}</td>
-        </tr>
-        {% if user.username != user.email %}
-        <tr>
-            <th>ユーザー名</th>
             <td>{{ user.email }}</td>
         </tr>
-        {% endif %}
         <tr>
             <th>姓</th>
             <td>{{ user.last_name }}</td>
