@@ -1,6 +1,5 @@
 下記URLよりサイトにアクセスすると、メールアドレスの変更が完了します。
 
-本登録用URL
 {{ protocol}}://{{ domain }}{% url 'register:email_change_complete' token %}
 
 ほにゃらら

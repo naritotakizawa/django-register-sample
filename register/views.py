@@ -182,7 +182,7 @@ class EmailChange(LoginRequiredMixin, generic.FormView):
         user = self.request.user
         new_email = form.cleaned_data['email']
 
-        # アクティベーションURLの送付
+        # URLの送付
         current_site = get_current_site(self.request)
         domain = current_site.domain
         context = {
@@ -208,12 +208,11 @@ class EmailChangeDone(LoginRequiredMixin, generic.TemplateView):
 
 
 class EmailChangeComplete(LoginRequiredMixin, generic.TemplateView):
-    """アクティベーションを踏んだ後に呼ばれるメアド変更ビュー"""
+    """リンクを踏んだ後に呼ばれるメアド変更ビュー"""
     template_name = 'register/email_change_complete.html'
     timeout_seconds = getattr(settings, 'ACTIVATION_TIMEOUT_SECONDS', 60*60*24)  # デフォルトでは1日以内
 
     def get(self, request, **kwargs):
-        """tokenが正しければ本登録."""
         token = kwargs.get('token')
         try:
             new_email = loads(token, max_age=self.timeout_seconds)
