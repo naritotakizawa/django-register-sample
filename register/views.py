@@ -138,7 +138,7 @@ class UserUpdate(OnlyYouMixin, generic.UpdateView):
 class PasswordChange(PasswordChangeView):
     """パスワード変更ビュー"""
     form_class = MyPasswordChangeForm
-
+    success_url = reverse_lazy('register:password_change_done')
     template_name = 'register/password_change.html'
 
 
