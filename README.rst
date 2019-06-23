@@ -10,7 +10,7 @@ django-register-sample
 ----------
 
 :Python: 3.6以上
-:Django: 2.0以上
+:Django: 2.2以上
 
 
 使い方
