@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.core.signing import BadSignature, SignatureExpired, loads, dumps
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, resolve_url
-from django.template.loader import get_template
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views import generic
 from .forms import (
@@ -60,11 +60,8 @@ class UserCreate(generic.CreateView):
             'user': user,
         }
 
-        subject_template = get_template('register/mail_template/create/subject.txt')
-        subject = subject_template.render(context)
-
-        message_template = get_template('register/mail_template/create/message.txt')
-        message = message_template.render(context)
+        subject = render_to_string('register/mail_template/create/subject.txt', context)
+        message = render_to_string('register/mail_template/create/message.txt', context)
 
         user.email_user(subject, message)
         return redirect('register:user_create_done')
@@ -192,11 +189,8 @@ class EmailChange(LoginRequiredMixin, generic.FormView):
             'user': user,
         }
 
-        subject_template = get_template('register/mail_template/email_change/subject.txt')
-        subject = subject_template.render(context)
-
-        message_template = get_template('register/mail_template/email_change/message.txt')
-        message = message_template.render(context)
+        subject = render_to_string('register/mail_template/email_change/subject.txt', context)
+        message = render_to_string('register/mail_template/email_change/message.txt', context)
         send_mail(subject, message, None, [new_email])
 
         return redirect('register:email_change_done')
