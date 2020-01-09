@@ -32,7 +32,7 @@ class Login(LoginView):
     template_name = 'register/login.html'
 
 
-class Logout(LoginRequiredMixin, LogoutView):
+class Logout(LogoutView):
     """ログアウトページ"""
     template_name = 'register/top.html'
 
